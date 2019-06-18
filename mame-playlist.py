@@ -3,9 +3,9 @@ import re
 import urllib.parse
 import json
 import argparse
-import requests
 import zipfile
 import xml.etree.ElementTree as ET
+from common import abspath, download_file
 
 MAME_VER_MAP = {
     '2010': 'MAME v0.139 (xml).zip',
@@ -13,16 +13,12 @@ MAME_VER_MAP = {
 
 MAMEDB_PATH = 'mamedb'
 
-def abspath(path):
-    return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
-
 def ensure_db(db_file):
     db_path = os.path.join(MAMEDB_PATH, db_file)
     if not os.path.exists(db_path):
         os.makedirs(MAMEDB_PATH, exist_ok=True)
         url = 'http://www.logiqx.com/Dats/MAMEBeta/' + urllib.parse.quote(db_file)
-        r = requests.get(url)
-        open(db_path, 'wb').write(r.content)
+        download_file(url, db_path)
 
     return db_path
 
@@ -72,7 +68,7 @@ def make_playlist(core, owned_roms, games, playlist):
     items = []
 
     for rom in owned_roms:
-        rom_name = os.path.basename(rom).rsplit('.')[0]
+        rom_name = os.path.basename(rom).rsplit('.', 1)[0]
         if rom_name not in games:
             continue
 
