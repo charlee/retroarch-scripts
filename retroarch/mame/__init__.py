@@ -6,8 +6,12 @@ import zipfile
 import requests
 import urllib.parse
 from io import BytesIO
+
+from retroarch.common import abspath
 from .mamedb import parse_datfile
 from .bundle_dir import BundleSet
+
+from retroarch.playlist import Playlist
 
 
 CORE_INFO = {
@@ -25,9 +29,6 @@ CORE_INFO = {
         'dbfile': 'mame2003.pkl',
     }
 }
-
-def abspath(path):
-    return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
 class MAME:
@@ -127,7 +128,8 @@ class MAME:
         bundle_set = BundleSet(romdir)
         cores_dir = os.path.join(self.root, 'cores')
 
-        playlist_entries = []
+        playlist = Playlist(self.root, 'MAME.lpl')
+        playlist.reset()
 
         for bundle in bundle_set.bundles:
             version = bundle.read_version()
@@ -138,24 +140,13 @@ class MAME:
 
             for core_info in self.cores:
                 if core_info['name'] == version['core_name']:
-                    entry = {
-                        'path': abspath(bundle.path),
-                        'label': version['description'],
-                        'core_path': core_info['fullpath'],
-                        'core_name': 'DETECT',
-                        'crc32': 'DETECT',
-                        'db_name': playlist_name,
-                    }
-
-                    playlist_entries.append(entry)
+                    playlist.add_entry(
+                        abspath(bundle.path),
+                        version['description'],
+                        core_info['fullpath'],
+                    )
                     break
 
-        playlist = {
-            'version': '1.0',
-            'items': playlist_entries,
-        }
-
-        playlist_file = os.path.join(self.root, 'playlists', playlist_name)
-        open(playlist_file, 'w').write(json.dumps(playlist, indent=2))
-        
+        playlist.save()
+        playlist.download_thumbnails()
 

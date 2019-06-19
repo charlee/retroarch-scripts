@@ -1,4 +1,4 @@
-from mame import MAME
+from retroarch.mame import MAME
 
 mame = MAME('~/.var/app/org.libretro.RetroArch/config/retroarch')
 
