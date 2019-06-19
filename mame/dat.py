@@ -3,7 +3,7 @@ from .cm import CMParser
 
 class Rom:
     def __init__(self, **kwargs):
-        for k in ('name', 'size', 'crc', 'sha1'):
+        for k in ('name', 'merge', 'size', 'crc', 'sha1'):
             setattr(self, k, kwargs.get(k))
 
     def __repr__(self):
@@ -15,9 +15,11 @@ class Game:
                   'sourcefile', 'cloneof', 'romof'):
             setattr(self, k, kwargs.get(k))
         self.roms = []
+        self.rom_map = {}
 
     def add_rom(self, rom):
         self.roms.append(rom)
+        self.rom_map[rom.crc] = rom
 
     def __repr__(self):
         return '<Game: name=%s>' % self.name
@@ -28,9 +30,17 @@ class MameDB:
         for k in ('name', 'description', 'category', 'version', 'author'):
             setattr(self, k, kwargs.get(k))
         self.games = []
+        self.game_map = {}
 
     def add_game(self, game):
         self.games.append(game)
+        self.game_map[game.name] = game
+
+    def get_game(self, game_name):
+        if game_name.endswith('.zip'):
+            game_name = game_name[:-4]
+
+        return self.game_map.get(game_name)
 
     def __repr__(self):
         return '<MameDB: name=%s>' % self.name
@@ -39,9 +49,9 @@ class DatFile:
 
     def parse(self, content):
         if '<?xml version="1.0"?>' in content:
-            self.parse_xml(content)
+            return self.parse_xml(content)
         else:
-            self.parse_cm(content)
+            return self.parse_cm(content)
 
     def extract_child(self, elem, child_tag):
         child = elem.find(child_tag)
@@ -76,6 +86,10 @@ class DatFile:
                 )
 
                 for r in g.findall('rom'):
+                    # Skip 'nodump' ROMS
+                    if self.extract_attr(r, 'status') == 'nodump':
+                        continue
+
                     rom = Rom(
                         name=self.extract_attr(r, 'name'),
                         merge=self.extract_attr(r, 'merge'),
@@ -87,7 +101,7 @@ class DatFile:
 
                 db.add_game(game)
         
-        self.db = db
+        return db
 
     def parse_cm(self, content):
         db = MameDB()
@@ -116,6 +130,10 @@ class DatFile:
 
                 roms_value = [dict(attr[1]) for attr in item[1] if attr[0] == 'rom']
                 for rv in roms_value:
+                    # Skip 'nodump' ROMS
+                    if rv.get('status') == 'nodump':
+                        continue
+
                     rom = Rom(
                         name=rv.get('name'),
                         merge=rv.get('merge'),
@@ -128,4 +146,4 @@ class DatFile:
 
                 db.add_game(game)
 
-        self.db = db
+        return db

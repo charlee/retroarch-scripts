@@ -1,7 +1,7 @@
-from mame.dat import DatFile
+from mame import MAME
+from mame.bundle_dir import BundleDir
 
-datfile = DatFile()
-# content = open('./mamedb/MAME v0.139.dat').read()
-content = open('./mamedb/MAME v0.78.dat').read()
-datfile.parse(content)
-import ipdb; ipdb.set_trace()
+mame = MAME('~/.var/app/org.libretro.RetroArch/config/retroarch')
+mame.ensure_mamedbs()
+
+mame.fix_bundles('./roms1')
