@@ -14,5 +14,5 @@ if __name__ == "__main__":
     parser.add_argument('--romdir', type=str, nargs=1, required=True, help='ROM directory.')
     args = parser.parse_args()
 
-    playlist = generate_mame_playlist(args.core[0], args.romdir[0])
+    playlist = generate_mame_playlist(args.root[0], args.romdir[0])
     

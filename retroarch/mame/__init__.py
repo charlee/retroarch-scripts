@@ -90,6 +90,7 @@ class MAME:
             self.mamedbs[core['name']] = db
 
     def fix_bundles(self, romdir):
+        romdir = abspath(romdir)
         bundle_set = BundleSet(romdir)
 
         for bundle in bundle_set.bundles:
@@ -125,6 +126,7 @@ class MAME:
                     break
 
     def make_playlist(self, romdir, playlist_name):
+        romdir = abspath(romdir)
         bundle_set = BundleSet(romdir)
         cores_dir = os.path.join(self.root, 'cores')
 
